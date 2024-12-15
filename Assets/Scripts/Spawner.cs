@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class Spawner : MonoBehaviour
 {
@@ -19,7 +18,8 @@ public class Spawner : MonoBehaviour
 
         for (var i = 0; i < count; i++)
         {
-            positions[i] = new Vector2(Mathf.Sin(i * 2 * Mathf.PI / count) * spawnSize, Mathf.Cos(i * 2 * Mathf.PI / count) * spawnSize);
+            positions[i] = new Vector2(Mathf.Sin(i * 2 * Mathf.PI / count) * spawnSize,
+                Mathf.Cos(i * 2 * Mathf.PI / count) * spawnSize);
             velocitys[i] = new Vector2(Random.value * 2 - 1f, Random.value * 2 - 1f) * initialVelocity;
         }
     }

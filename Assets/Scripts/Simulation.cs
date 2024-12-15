@@ -1,6 +1,4 @@
-using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class Simulation : MonoBehaviour
 {
@@ -39,7 +37,7 @@ public class Simulation : MonoBehaviour
         for (var i = 0; i < positions.Length; i++)
         {
             // Force
-            Vector2 force = Vector2.zero;
+            var force = Vector2.zero;
 
             // Gravity
             force += Vector2.down * gravity;
@@ -47,13 +45,14 @@ public class Simulation : MonoBehaviour
             velocitys[i] += force * Time.deltaTime;
 
             positions[i] += velocitys[i] * Time.deltaTime;
-            
+
             // Collisions
             if (Mathf.Abs(positions[i].x) > boundSize.x)
             {
                 positions[i].x = Mathf.Sign(positions[i].x) * boundSize.x;
                 velocitys[i].x *= -1 * collisionDamping;
             }
+
             if (Mathf.Abs(positions[i].y) > boundSize.y)
             {
                 positions[i].y = Mathf.Sign(positions[i].y) * boundSize.y;

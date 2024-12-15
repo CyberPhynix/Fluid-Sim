@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,18 +8,18 @@ public class Display : MonoBehaviour
     public float circleSize = .5f;
     [Range(3, 30)]
     public uint circleResolution = 30;
-    
+
     // Caching
     private Mesh circleMesh;
-    private RenderParams rp;
     private Color materialColor;
+    private RenderParams rp;
 
     private void OnValidate()
     {
         UpdateMesh(circleSize, circleResolution);
         UpdateMaterial(circleColor);
     }
-    
+
     public void UpdateMesh(float size, uint resolution)
     {
         circleSize = size;
@@ -31,7 +30,7 @@ public class Display : MonoBehaviour
     private void UpdateMaterial(Color color)
     {
         materialColor = color;
-        Material material = new Material(Shader.Find("Universal Render Pipeline/Unlit"))
+        var material = new Material(Shader.Find("Universal Render Pipeline/Unlit"))
         {
             enableInstancing = true,
             color = color
@@ -45,7 +44,7 @@ public class Display : MonoBehaviour
 
         for (var i = 0; i < positions.Length; i++)
             matrices[i] = Matrix4x4.Translate(positions[i]);
-        
+
         Graphics.RenderMeshInstanced(rp, circleMesh, 0, matrices);
     }
 
