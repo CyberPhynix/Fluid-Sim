@@ -7,7 +7,7 @@ public class Simulation : MonoBehaviour
 
     [Header("Physics")]
     [Range(0, 10)]
-    public float gravity = 0.05f;
+    public float gravity = 9.81f;
     [Range(0, 1)]
     public float collisionDamping = 0.9f;
 

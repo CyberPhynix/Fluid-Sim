@@ -3,8 +3,6 @@ using UnityEngine;
 public class Spawner : MonoBehaviour
 {
     public uint count = 100;
-    [Range(0, 8)]
-    public float spawnSize = 4;
     [Min(0)]
     public float initialVelocity = 1;
 
@@ -18,8 +16,7 @@ public class Spawner : MonoBehaviour
 
         for (var i = 0; i < count; i++)
         {
-            positions[i] = new Vector2(Mathf.Sin(i * 2 * Mathf.PI / count) * spawnSize,
-                Mathf.Cos(i * 2 * Mathf.PI / count) * spawnSize);
+            positions[i] = new Vector2(Random.Range(-10f, 10f), Random.Range(-5f, 5f));
             velocitys[i] = new Vector2(Random.value * 2 - 1f, Random.value * 2 - 1f) * initialVelocity;
         }
     }

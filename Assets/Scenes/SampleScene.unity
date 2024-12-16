@@ -305,7 +305,7 @@ MonoBehaviour:
   display: {fileID: 1746657270}
   spawner: {fileID: 1746657271}
   gravity: 9.81
-  collisionDamping: 1
+  collisionDamping: 0.9
   boundSize: {x: 15, y: 8}
 --- !u!114 &1746657270
 MonoBehaviour:
@@ -334,9 +334,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd0b1be5c7fedfe4e93173e77ea16825, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  count: 1
-  spawnSize: 0
-  initialVelocity: 0
+  count: 10
+  initialVelocity: 10
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
