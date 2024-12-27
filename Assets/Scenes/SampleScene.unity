@@ -306,10 +306,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   display: {fileID: 1746657270}
   spawner: {fileID: 1746657272}
-  gravity: 0
-  collisionDamping: 0.9
+  gravity: 9.81
+  collisionDamping: 0.8
   smoothingRadius: 2
   particleMass: 1
+  targetDensity: 1
+  pressureForceMultiplier: 100
   boundSize: {x: 15, y: 8}
 --- !u!114 &1746657270
 MonoBehaviour:
@@ -338,8 +340,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14d4335ce45a53a4daaa19ce87b3e2a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  count: 10
-  initialVelocity: 1
+  count: 100
+  initialVelocity: 0
   spawnInMiddle: 0
 --- !u!114 &1746657272
 MonoBehaviour:

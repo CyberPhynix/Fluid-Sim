@@ -13,7 +13,7 @@ public class RandomSpawner : Spawner
 
         for (var i = 0; i < count; i++)
         {
-            positions[i] = spawnInMiddle ? Vector2.zero : new Vector2(Random.Range(-10f, 10f), Random.Range(-5f, 5f));
+            positions[i] = spawnInMiddle ? Vector2.zero : new Vector2(Random.Range(-15f, 15f), Random.Range(-8f, 8f));
             velocitys[i] = new Vector2(Random.value * 2 - 1f, Random.value * 2 - 1f) * initialVelocity;
         }
     }

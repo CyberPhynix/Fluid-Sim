@@ -12,14 +12,20 @@ public class Simulation : MonoBehaviour
     public float collisionDamping = 0.9f;
     [Range(0, 3)]
     public float smoothingRadius = 1;
-    [Range(0, 2)]
+    [Min(0)]
     public float particleMass = 1;
+    [Min(0)]
+    public float targetDensity = 5;
+    [Tooltip("Stiffness; How fast the density is corrected; Gas constant")]
+    public float pressureForceMultiplier = 1;
 
     [Header("Environment")]
     public Vector2 boundSize = new(15, 8);
 
-    private float[] densities; // REMOVE
+    private float[] densities;
+    private Vector2[] forces;
     private Vector2[] positions;
+    private float[] pressures;
     private Vector2[] velocitys;
 
     // Start is called once before the first execution of Update
@@ -28,7 +34,9 @@ public class Simulation : MonoBehaviour
         spawner.Init();
         positions = spawner.GetPositions();
         velocitys = spawner.GetVelocitys();
-        densities = new float[positions.Length]; // REMOVE
+        densities = new float[positions.Length];
+        pressures = new float[positions.Length];
+        forces = new Vector2[positions.Length];
     }
 
     // Update is called once per frame
@@ -42,16 +50,29 @@ public class Simulation : MonoBehaviour
     {
         for (var i = 0; i < positions.Length; i++)
         {
-            // Density
             densities[i] = CalculateDensity(positions[i]);
+            pressures[i] = Mathf.Max(pressureForceMultiplier * (densities[i] - targetDensity), 0);
+        }
 
+
+        for (var i = 0; i < positions.Length; i++)
+        {
             // Force
-            var force = Vector2.zero;
+            Vector2 force = Vector2.zero;
+
+            // Pressure
+            force += CalculatePressureForce(i);
 
             // Gravity
             force += Vector2.down * gravity;
 
-            velocitys[i] += force * Time.deltaTime;
+            forces[i] = force;
+        }
+
+        for (var i = 0; i < positions.Length; i++)
+        {
+            // velocitys[i] *= .99f;
+            velocitys[i] += forces[i] * Time.deltaTime / densities[i];
 
             positions[i] += velocitys[i] * Time.deltaTime;
 
@@ -68,10 +89,32 @@ public class Simulation : MonoBehaviour
         if (positions == null) return;
         for (var i = 0; i < positions.Length; i++)
         {
-            var color = Color.Lerp(Color.green, Color.red, densities[i] / 10);
-            Gizmos.color = color;
+            // density deviation
+            var pd = densities[i] - targetDensity;
+            Gizmos.color = Color.Lerp(pd > 0 ? Color.red : Color.blue, Color.green, 1 - Mathf.Abs(pd));
             Gizmos.DrawSphere(positions[i], 0.2f);
         }
+    }
+
+    private Vector2 CalculatePressureForce(int particleIndex)
+    {
+        Vector2 pressureForce = Vector2.zero;
+        for (var j = 0; j < positions.Length; j++)
+        {
+            if (particleIndex == j) continue;
+
+            var distance = Vector2.Distance(positions[particleIndex], positions[j]);
+            Vector2 direction = (positions[j] - positions[particleIndex]).normalized;
+
+            var sharedPressure = (pressures[particleIndex] + pressures[j]) / 2;
+            pressureForce += direction *
+                             (sharedPressure * Kernel.SpikyKernelGradient(distance, smoothingRadius) *
+                                 particleMass / densities[j]);
+            // pressureForce += direction * positions[j] * (Kernel.SpikyKernelGradient(distance, smoothingRadius) * particleMass) /
+            //                 densities[j];
+        }
+
+        return pressureForce;
     }
 
     public float CalculateDensity(Vector2 pos)
