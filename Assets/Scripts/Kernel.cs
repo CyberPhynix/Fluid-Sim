@@ -41,4 +41,22 @@ public static class Kernel
 
         return -45f / (Mathf.PI * h6) * Mathf.Pow(h - r, 2);
     }
+
+    public static float SLSmoothingKernel(float dst, float radius)
+    {
+        if (dst >= radius)
+            return 0;
+
+        var volume = Mathf.PI * Mathf.Pow(radius, 4) / 6;
+        return (radius - dst) * (radius - dst) / volume;
+    }
+
+    public static float SLSmoothingKernelDerivative(float dst, float radius)
+    {
+        if (dst >= radius)
+            return 0;
+
+        var scale = 12 / (Mathf.Pow(radius, 4) * Mathf.PI);
+        return (dst - radius) * scale;
+    }
 }

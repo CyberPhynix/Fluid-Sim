@@ -5,6 +5,9 @@ public class Simulation : MonoBehaviour
     public Display display;
     public Spawner spawner;
 
+    [Header("Simulation")]
+    public uint timeStepsPerSecond = 50;
+
     [Header("Physics")]
     [Range(0, 10)]
     public float gravity = 9.81f;
@@ -31,6 +34,8 @@ public class Simulation : MonoBehaviour
     // Start is called once before the first execution of Update
     private void Start()
     {
+        Time.fixedDeltaTime = 1f / timeStepsPerSecond;
+
         spawner.Init();
         positions = spawner.GetPositions();
         velocitys = spawner.GetVelocitys();
@@ -51,7 +56,7 @@ public class Simulation : MonoBehaviour
         for (var i = 0; i < positions.Length; i++)
         {
             densities[i] = CalculateDensity(positions[i]);
-            pressures[i] = Mathf.Max(pressureForceMultiplier * (densities[i] - targetDensity), 0);
+            pressures[i] = CalculatePressure(i);
         }
 
 
@@ -71,9 +76,7 @@ public class Simulation : MonoBehaviour
 
         for (var i = 0; i < positions.Length; i++)
         {
-            // velocitys[i] *= .99f;
-            velocitys[i] += forces[i] * Time.deltaTime / densities[i];
-
+            velocitys[i] += forces[i] * Time.deltaTime;
             positions[i] += velocitys[i] * Time.deltaTime;
 
             // Collisions
@@ -92,8 +95,28 @@ public class Simulation : MonoBehaviour
             // density deviation
             var pd = densities[i] - targetDensity;
             Gizmos.color = Color.Lerp(pd > 0 ? Color.red : Color.blue, Color.green, 1 - Mathf.Abs(pd));
-            Gizmos.DrawSphere(positions[i], 0.2f);
+            Gizmos.DrawSphere(positions[i], 0.08f);
         }
+    }
+
+    public float CalculateDensity(Vector2 pos)
+    {
+        var density = 0f;
+        for (var j = 0; j < positions.Length; j++)
+        {
+            var distance = Vector2.Distance(pos, positions[j]);
+            density += particleMass * Kernel.Poly6Kernel(distance, smoothingRadius);
+        }
+
+        return density;
+    }
+
+    private float CalculatePressure(int i)
+    {
+        var ownDensity = Kernel.Poly6Kernel(0, smoothingRadius);
+        var density = densities[i] - ownDensity;
+        return pressureForceMultiplier * (density - targetDensity);
+        // return Mathf.Max(pressureForceMultiplier * (density - targetDensity), 0);
     }
 
     private Vector2 CalculatePressureForce(int particleIndex)
@@ -115,18 +138,6 @@ public class Simulation : MonoBehaviour
         }
 
         return pressureForce;
-    }
-
-    public float CalculateDensity(Vector2 pos)
-    {
-        var density = 0f;
-        for (var j = 0; j < positions.Length; j++)
-        {
-            var distance = Vector2.Distance(pos, positions[j]);
-            density += particleMass * Kernel.Poly6Kernel(distance, smoothingRadius);
-        }
-
-        return density;
     }
 
     private void resolveCollision(ref Vector2 pos, ref Vector2 vel)
