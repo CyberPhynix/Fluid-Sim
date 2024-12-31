@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class Simulation : MonoBehaviour
@@ -53,16 +54,15 @@ public class Simulation : MonoBehaviour
     // FixedUpdate is called Frame-rate independent
     private void FixedUpdate()
     {
-        for (var i = 0; i < positions.Length; i++)
-        {
-            densities[i] = CalculateDensity(positions[i]);
-            pressures[i] = CalculatePressure(i);
-        }
+        // Calculate densities in parallel
+        Parallel.For(0, positions.Length, i => { densities[i] = CalculateDensity(positions[i]); });
 
+        // Calculate pressures in parallel
+        Parallel.For(0, positions.Length, i => { pressures[i] = CalculatePressure(i); });
 
-        for (var i = 0; i < positions.Length; i++)
+        // Calculate forces in parallel
+        Parallel.For(0, positions.Length, i =>
         {
-            // Force
             Vector2 force = Vector2.zero;
 
             // Pressure
@@ -72,7 +72,7 @@ public class Simulation : MonoBehaviour
             force += Vector2.down * gravity;
 
             forces[i] = force;
-        }
+        });
 
         for (var i = 0; i < positions.Length; i++)
         {
