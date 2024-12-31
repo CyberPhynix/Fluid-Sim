@@ -27,10 +27,9 @@ public class Simulation : MonoBehaviour
     public Vector2 boundSize = new(15, 8);
 
     private float[] densities;
-    private Vector2[] forces;
     private Vector2[] positions;
-    private float[] pressures;
-    private Vector2[] velocitys;
+    private Vector2[] predictedPositions;
+    private Vector2[] velocities;
 
     // Start is called once before the first execution of Update
     private void Start()
@@ -39,10 +38,9 @@ public class Simulation : MonoBehaviour
 
         spawner.Init();
         positions = spawner.GetPositions();
-        velocitys = spawner.GetVelocitys();
+        velocities = spawner.GetVelocitys();
         densities = new float[positions.Length];
-        pressures = new float[positions.Length];
-        forces = new Vector2[positions.Length];
+        predictedPositions = new Vector2[positions.Length];
     }
 
     // Update is called once per frame
@@ -54,57 +52,56 @@ public class Simulation : MonoBehaviour
     // FixedUpdate is called Frame-rate independent
     private void FixedUpdate()
     {
+        var deltaTime = Time.deltaTime;
+
+        Parallel.For(0, positions.Length,
+            i =>
+            {
+                velocities[i] += Vector2.down * (gravity * deltaTime);
+                predictedPositions[i] = positions[i] + velocities[i] * deltaTime;
+            });
+
         // Calculate densities in parallel
-        Parallel.For(0, positions.Length, i => { densities[i] = CalculateDensity(positions[i]); });
+        Parallel.For(0, positions.Length, i => { densities[i] = CalculateDensity(predictedPositions[i]); });
 
         // Calculate pressures in parallel
-        Parallel.For(0, positions.Length, i => { pressures[i] = CalculatePressure(i); });
-
-        // Calculate forces in parallel
         Parallel.For(0, positions.Length, i =>
         {
-            Vector2 force = Vector2.zero;
-
-            // Pressure
-            force += CalculatePressureForce(i);
-
-            // Gravity
-            force += Vector2.down * gravity;
-
-            forces[i] = force;
+            Vector2 pressureForce = CalculatePressureForce(i);
+            Vector2 pressureAcceleration = pressureForce / densities[i];
+            velocities[i] += pressureAcceleration * deltaTime;
         });
 
-        for (var i = 0; i < positions.Length; i++)
+        Parallel.For(0, positions.Length, i =>
         {
-            velocitys[i] += forces[i] * Time.deltaTime;
-            positions[i] += velocitys[i] * Time.deltaTime;
+            positions[i] += velocities[i] * deltaTime;
 
             // Collisions
-            resolveCollision(ref positions[i], ref velocitys[i]);
-        }
+            resolveCollision(ref positions[i], ref velocities[i]);
+        });
     }
 
     // Draw gizmos bounding box
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = new Color(1, .4f, 0, .5f);
-        Gizmos.DrawWireCube(Vector3.zero, boundSize * 2);
-        if (positions == null) return;
-        for (var i = 0; i < positions.Length; i++)
-        {
-            // density deviation
-            var pd = densities[i] - targetDensity;
-            Gizmos.color = Color.Lerp(pd > 0 ? Color.red : Color.blue, Color.green, 1 - Mathf.Abs(pd));
-            Gizmos.DrawSphere(positions[i], 0.08f);
-        }
-    }
+    // private void OnDrawGizmos()
+    // {
+    //     Gizmos.color = new Color(1, .4f, 0, .5f);
+    //     Gizmos.DrawWireCube(Vector3.zero, boundSize * 2);
+    //     if (positions == null) return;
+    //     for (var i = 0; i < positions.Length; i++)
+    //     {
+    //         // density deviation
+    //         var pd = densities[i] - targetDensity;
+    //         Gizmos.color = Color.Lerp(pd > 0 ? Color.red : Color.blue, Color.green, 1 - Mathf.Abs(pd));
+    //         Gizmos.DrawSphere(positions[i], 0.08f);
+    //     }
+    // }
 
     public float CalculateDensity(Vector2 pos)
     {
         var density = 0f;
         for (var j = 0; j < positions.Length; j++)
         {
-            var distance = Vector2.Distance(pos, positions[j]);
+            var distance = Vector2.Distance(pos, predictedPositions[j]);
             density += particleMass * Kernel.Poly6Kernel(distance, smoothingRadius);
         }
 
@@ -126,14 +123,14 @@ public class Simulation : MonoBehaviour
         {
             if (particleIndex == j) continue;
 
-            var distance = Vector2.Distance(positions[particleIndex], positions[j]);
-            Vector2 direction = (positions[j] - positions[particleIndex]).normalized;
+            var distance = Vector2.Distance(predictedPositions[particleIndex], predictedPositions[j]);
+            Vector2 direction = (predictedPositions[j] - predictedPositions[particleIndex]).normalized;
 
-            var sharedPressure = (pressures[particleIndex] + pressures[j]) / 2;
+            var sharedPressure = (CalculatePressure(particleIndex) + CalculatePressure(j)) / 2;
             pressureForce += direction *
                              (sharedPressure * Kernel.SpikyKernelGradient(distance, smoothingRadius) *
                                  particleMass / densities[j]);
-            // pressureForce += direction * positions[j] * (Kernel.SpikyKernelGradient(distance, smoothingRadius) * particleMass) /
+            // pressureForce += direction * predictedPositions[j] * (Kernel.SpikyKernelGradient(distance, smoothingRadius) * particleMass) /
             //                 densities[j];
         }
 

@@ -306,14 +306,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   display: {fileID: 1746657270}
-  spawner: {fileID: 1746657274}
-  timeStepsPerSecond: 60
-  gravity: 0
-  collisionDamping: 1
-  smoothingRadius: 2
+  spawner: {fileID: 1746657272}
+  timeStepsPerSecond: 70
+  gravity: 9.81
+  collisionDamping: 0.9
+  smoothingRadius: 1
   particleMass: 1
-  targetDensity: 55
-  pressureForceMultiplier: 1
+  targetDensity: 3
+  pressureForceMultiplier: 500
   boundSize: {x: 15, y: 8}
 --- !u!114 &1746657270
 MonoBehaviour:
@@ -342,7 +342,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14d4335ce45a53a4daaa19ce87b3e2a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  count: 100
+  count: 200
   initialVelocity: 0
   spawnInMiddle: 0
 --- !u!114 &1746657272
@@ -357,8 +357,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f19d516180b89804da590df89b4e24c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rows: 15
-  columns: 20
+  rows: 20
+  columns: 25
   spacing: 0.5
 --- !u!114 &1746657273
 MonoBehaviour:
